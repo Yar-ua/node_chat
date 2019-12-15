@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 var winston = require('winston');
 var ENV = process.env.NODE_ENV;
 
@@ -10,13 +12,14 @@ function getLogger(module){
 
 	return new winston.createLogger({
     format: combine(
-      format.label({ label: path }),
-      format.simple()
+      format.simple(),
+      format.label({ label: path })
     ),
   	transports: [
   		new winston.transports.Console({
           format: format.combine(
           format.colorize(),
+          // format.level((ENV == 'development') ? 'debug' : 'error'),
           format.simple()
         )
       })
