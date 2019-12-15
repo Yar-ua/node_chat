@@ -1,8 +1,6 @@
 require('dotenv').config();
 
 var express = require('express');
-// var routes = require('./routes');
-// var user = require('./routes/user');
 var http = require('http');
 
 // var createError = require('http-errors');
@@ -14,17 +12,9 @@ var errorHandler = require('errorhandler')();
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 
-
-// var cookieParser = require('cookie-parser');
-// var logger = require('morgan');
-
-// var indexRouter = require('./routes/index');
-// var usersRouter = require('./routes/users');
-
 var app = express();
 
-
-// view engine setup
+app.engine('ejs', require('ejs-locals'));
 app.set('views', path.join(__dirname, 'templates'));
 app.set('view engine', 'ejs');
 
@@ -37,7 +27,6 @@ app.use(express.Router());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-
 // all my environment
 app.set('port', process.env.port || config.get('port'));
 
@@ -46,11 +35,10 @@ http.createServer(app).listen(app.get('port'), function(){
   log.info('Express server listening on port ' + config.get('port'));
 });
 
-
 app.use(function(req, res, next){
   res.render("index", {
     title: 'node_chat',
-    body: '<b> Hola! </b>'
+    body: '<b>Hola!</b>'
   });
 });
 

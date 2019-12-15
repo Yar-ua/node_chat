@@ -5,7 +5,9 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
-    <p>Welcome to <%= body %></p>
-    <p>Welcome to <%- body %></p>
+<% layout('/layout/page') -%>
+<% block('title', 'Привет ≥︺‿︺≤'); -%>
+
+<p class="lead">Всем привет!</p>
   </body>
 </html>
