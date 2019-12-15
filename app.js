@@ -5,7 +5,10 @@ var http = require('http');
 
 
 // var createError = require('http-errors');
+require('dotenv').config();
 var path = require('path');
+var config = require('./config');
+var log = require('./libs/log')(module);
 var errorHandler = require('errorhandler')();
 
 // var cookieParser = require('cookie-parser');
@@ -18,12 +21,11 @@ var app = express();
 
 
 // all my environment
-app.set('port', process.env.port || 3000);
+app.set('port', process.env.port || config.get('port'));
 
 //create server
 http.createServer(app).listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
-  console.log('=== ' + app.get('env'));
+  log.info('Express server listening on port ' + config.get('port'));
 });
 
 // Middleware
