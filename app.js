@@ -8,9 +8,10 @@ var path = require('path');
 var config = require('./config');
 var log = require('./libs/log')(module);
 var logger = require('morgan');
-var errorHandler = require('errorhandler')();
+var errorHandler = require('errorhandler');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
+var HttpError = require('./error').HttpError;
 
 var app = express();
 
@@ -23,8 +24,13 @@ app.use(bodyParser.text({ type: 'text/html' })); // for application/text-html
 app.use(bodyParser.json({ type: 'application/*+json' })); // for application/json
 app.use(bodyParser.urlencoded({ extended: false })); // for encoding URL
 app.use(cookieParser());
-app.use(express.Router());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(require('./middleware/sendHttpError'));
+
+app.use(express.Router());
+
+
+require('./routes')(app);
 
 
 // all my environment
@@ -35,77 +41,22 @@ http.createServer(app).listen(app.get('port'), function(){
   log.info('Express server listening on port ' + config.get('port'));
 });
 
-var User = require('./models/user').User;
-app.get('/users', function(req, res, next){
-  User.find({}, function(err, users){
-    if (err) return next(err);
-    res.json(users);
-  })
+
+// Error handler
+app.use(function(err, req, res, next){
+  if (typeof err == 'number') { // next(404);
+    err = new HttpError(err);
+  }
+
+  if (err instanceof HttpError) {
+    res.sendHttpError(err);
+  } else {
+    if (app.get('env') == 'development') {
+      errorHandler()(err, req, res, next);
+    } else {
+      log.error(err);
+      err = new HttpError(500);
+      res.sendHttpError(err);
+    }
+  }
 });
-// Middleware
-// app.use(function(req, res, next){
-//   if (req.url == '/') {
-//     res.send('Hola!');
-//   } else {
-//     next();
-//   }  
-// });
-
-// app.use(function(req, res, next){
-//   if (req.url == '/forbidden') {
-//     next(new Error('Access denied'));
-//   } else {
-//     next();
-//   }  
-// });
-
-// app.use(function(req, res, next){
-//   if (req.url == '/test') {
-//     res.send('Test!');
-//   } else {
-//     next();
-//   }  
-// });
-
-// // Error handler
-// app.use(function(err, req, res, next){
-//   // NODE_ENV
-//   if (app.get('env') == 'development') {
-//     errorHandler(err, req, res, next);
-//   } else {
-//     res.send(500);
-//   }
-// });
-
-// app.use(function(req, res, next){
-//     res.send(404, 'no page');  
-// });
-
-
-
-// //session
-
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: false }));
-// app.use(app)
-
-// app.use('/', indexRouter);
-// app.use('/users', usersRouter);
-
-// // catch 404 and forward to error handler
-// app.use(function(req, res, next) {
-//   next(createError(404));
-// });
-
-// // error handler
-// app.use(function(err, req, res, next) {
-//   // set locals, only providing error in development
-//   res.locals.message = err.message;
-//   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-//   // render the error page
-//   res.status(err.status || 500);
-//   res.render('error');
-// });
-
-// module.exports = app;
