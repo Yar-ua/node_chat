@@ -35,13 +35,13 @@ http.createServer(app).listen(app.get('port'), function(){
   log.info('Express server listening on port ' + config.get('port'));
 });
 
-app.use(function(req, res, next){
-  res.render("index", {
-    title: 'node_chat',
-    body: '<b>Hola!</b>'
-  });
+var User = require('./models/user').User;
+app.get('/users', function(req, res, next){
+  User.find({}, function(err, users){
+    if (err) return next(err);
+    res.json(users);
+  })
 });
-
 // Middleware
 // app.use(function(req, res, next){
 //   if (req.url == '/') {
