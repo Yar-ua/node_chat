@@ -13,6 +13,10 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var HttpError = require('./error').HttpError;
 
+var mongoose = require('./libs/mongoose');
+
+var session = require('express-session');
+
 var app = express();
 
 app.engine('ejs', require('ejs-locals'));
@@ -23,7 +27,25 @@ app.use(logger('dev'));
 app.use(bodyParser.text({ type: 'text/html' })); // for application/text-html
 app.use(bodyParser.json({ type: 'application/*+json' })); // for application/json
 app.use(bodyParser.urlencoded({ extended: false })); // for encoding URL
+
 app.use(cookieParser());
+
+var MongoStore = require('connect-mongo')(session);
+
+app.use(session({
+  secret: config.get('session:secret'),
+  key: config.get('session:key'),
+  resave: config.get('session:resave'),
+  saveUninitialized: config.get('session:saveUninitialized'),
+  cookie: config.get('session:secure'),
+  store: new MongoStore({ mongooseConnection: mongoose.connection })
+}))
+
+app.use(function(req, res, next){
+  req.session.numberOfVisit = req.session.numberOfVisit + 1 || 1;
+  res.send("Visits: " + req.session.numberOfVisit);
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(require('./middleware/sendHttpError'));
 
