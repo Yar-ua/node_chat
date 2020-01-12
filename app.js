@@ -41,27 +41,19 @@ app.use(session({
   store: new MongoStore({ mongooseConnection: mongoose.connection })
 }))
 
-app.use(function(req, res, next){
-  req.session.numberOfVisit = req.session.numberOfVisit + 1 || 1;
-  res.send("Visits: " + req.session.numberOfVisit);
-});
+// app.use(function(req, res, next){
+//   req.session.numberOfVisit = req.session.numberOfVisit + 1 || 1;
+//   res.send("Visits: " + req.session.numberOfVisit);
+// });
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(require('./middleware/sendHttpError'));
 
+app.use(require('./middleware/loadUser'));
+
+// router
 app.use(express.Router());
-
-
 require('./routes')(app);
-
-
-// all my environment
-app.set('port', process.env.port || config.get('port'));
-
-//create server
-http.createServer(app).listen(app.get('port'), function(){
-  log.info('Express server listening on port ' + config.get('port'));
-});
 
 
 // Error handler
@@ -81,4 +73,13 @@ app.use(function(err, req, res, next){
       res.sendHttpError(err);
     }
   }
+});
+
+
+// all my environment
+app.set('port', process.env.port || config.get('port'));
+
+//create server
+http.createServer(app).listen(app.get('port'), function(){
+  log.info('Express server listening on port ' + config.get('port'));
 });
