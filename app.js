@@ -84,12 +84,4 @@ var server = http.createServer(app).listen(app.get('port'), function(){
   log.info('Express server listening on port ' + config.get('port'));
 });
 
-
-const io = require('socket.io')(server);
-
-io.on('connection', function(socket){
-  socket.on('message', function(text, cb){
-    socket.broadcast.emit('message', text);
-    cb(text);
-  });
-});
+require('./socket')(server);
