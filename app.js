@@ -1,4 +1,5 @@
 require('dotenv').config();
+var util = require('util');
 
 var express = require('express');
 var http = require('http');
@@ -30,21 +31,17 @@ app.use(bodyParser.urlencoded({ extended: false })); // for encoding URL
 
 app.use(cookieParser());
 
-var MongoStore = require('connect-mongo')(session);
+// var MongoStore = require('connect-mongo')(session);
+var sessionStore = require('./libs/sessionStore');
 
 app.use(session({
   secret: config.get('session:secret'),
   key: config.get('session:key'),
   resave: config.get('session:resave'),
   saveUninitialized: config.get('session:saveUninitialized'),
-  cookie: config.get('session:secure'),
-  store: new MongoStore({ mongooseConnection: mongoose.connection })
-}))
-
-// app.use(function(req, res, next){
-//   req.session.numberOfVisit = req.session.numberOfVisit + 1 || 1;
-//   res.send("Visits: " + req.session.numberOfVisit);
-// });
+  cookie: config.get('session:cookie'),
+  store: sessionStore
+}));
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(require('./middleware/sendHttpError'));
@@ -80,6 +77,9 @@ app.use(function(err, req, res, next){
 app.set('port', process.env.port || config.get('port'));
 
 //create server
-http.createServer(app).listen(app.get('port'), function(){
+var server = http.createServer(app).listen(app.get('port'), function(){
   log.info('Express server listening on port ' + config.get('port'));
 });
+
+var io = require('./socket')(server);
+app.set('io', io);
