@@ -94,7 +94,33 @@ module.exports = function(server){
     
   });
 
-  io.on('connection', function(socket){
+  io.sockets.on('session:reload', function(sid){
+    var clients = io.sockets.clients();
+
+    clients.forEach(function(client){
+      if (client.handshake.session.id != sid) return;
+
+      loadSession(sid, function(err, session){
+        if (err) {
+          client.emit("error", "server error");
+          client.disconnect();
+          return;
+        }
+
+        if (!session) {
+          client.emit("logout");
+          client.disconnect();
+          return;
+        }
+
+        client.handshake.session = session;
+      });
+
+    });
+    
+  });
+
+  io.sockets.on('connection', function(socket){
     /*
     in old socket version to get handsheke here was possible in next method
     var username = socket.handshake.user.get('username');
