@@ -25,8 +25,14 @@
   });
 
   socket
-      .on('message', function(message) {
-        printMessage(message);
+      .on('message', function(username, message) {
+        printMessage(username + "> " + message);
+      })
+      .on('leave', function(username) {
+        printStatus(username + " left chat");
+      })
+      .on('join', function(username) {
+        printStatus(username + " joined chat");
       })
       .on('connect', function() {
         printStatus("connected");
@@ -37,24 +43,29 @@
         printStatus("connection lost");
         form.off('submit', sendMessage);
         input.prop('disabled', true);
-        setTimeout(reconnect, 500);
+        this.$emit('error');
+      })
+      .on('logout', function() {
+        location.href = "/";
+      })
+      .on('error', function(reason) {
+        if (reason == "handshake unauthorized") {
+          printStatus("you left site");
+        } else {
+          setTimeout(function() {
+            socket.socket.connect();
+          }, 500);
+        }
       });
 
   function sendMessage() {
     var text = input.val();
     socket.emit('message', text, function() {
-      printMessage(text);
+      printMessage("Me >> " + text);
     });
 
     input.val('');
     return false;
-  }
-
-  function reconnect() {
-    socket.once('error', function() {
-      setTimeout(reconnect, 500);
-    });
-    socket.socket.connect();
   }
 
   function printStatus(status) {

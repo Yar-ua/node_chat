@@ -75,6 +75,7 @@ module.exports = function(server){
         if (!user) {
           callback(new HttpError(403, "Anonymous session cannnot connect"));
         }
+
         handshake.user = user;
         callback(null);
       }
@@ -94,9 +95,29 @@ module.exports = function(server){
   });
 
   io.on('connection', function(socket){
+    /*
+    in old socket version to get handsheke here was possible in next method
+    var username = socket.handshake.user.get('username');
+    in new ver. handshake what coming here is not updated (without 'user' data)
+    and it nesessary to reload handshake in this method
+    var handshake = socket.request;
+    */
+    
+    var handshake = socket.request;
+    var username = handshake.user.get('username');
+
+    socket.broadcast.emit('join', username);
+
     socket.on('message', function(text, cb){
-      socket.broadcast.emit('message', text);
-      cb();
+      socket.broadcast.emit('message', username, text);
+      cb && cb();
     });
+
+    socket.on('disconnect', function(){
+      socket.broadcast.emit('leave', username);
+    });
+
   });
+
+  return io;
 };
