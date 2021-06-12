@@ -1,69 +1,43 @@
-var User = require('./models/user').User;
+var mongoose = require('./lib/mongoose');
+var async = require('async');
 
-var user = new User({
-  username: "Tester",
-  password: "secret"
+async.series([
+  open,
+  dropDatabase,
+  requireModels,
+  createUsers
+], function(err, results) {
+  console.log(arguments);
+  mongoose.disconnect();
+  process.exit(err ? 255 : 0);
 });
 
-user.save(function(err, user, affected){
-  if (err) throw err;
+function open(callback) {
+  mongoose.connection.on('open', callback);
+}
 
-  User.findOne({username: "Tester"}, function(err, tester){
-    console.log(tester);
-  })
-  console.log(arguments);
-})
+function dropDatabase(callback) {
+  db = mongoose.connection.db;
+  db.dropDatabase(callback);
+}
 
+function requireModels(callback) {
+  require('./models/user');
 
-// user.save();
+  async.each(Object.keys(mongoose.models), function(modelName, callback) {
+    mongoose.models[modelName].ensureIndexes(callback);
+  }, callback);
+}
 
+function createUsers(callback) {
+  var users = [
+    {username: "test1", password: '111111'},
+    {username: "test2", password: '222222'},
+    {username: "admin", password: 'adminpass'}
+  ];
 
-
-
-
-// const mongoose = require('mongoose');
-
-// mongoose.connect('mongodb://localhost/node_chat');
-
-// const catSchema = new mongoose.Schema({
-//   name: String
-// });
-
-// const Cat = mongoose.model('Cat', catSchema);
-
-// var kitty = new Cat({
-//   name: "Tom"
-// });
-
-// console.log(kitty);
-
-// kitty.save(function(err, kitty, affected){
-//   console.log(arguments);
-// })
-
-
-
-
-
-// const { MongoClient } = require('mongodb');
-// const url = 'mongodb://localhost:27017';
-// const client = new MongoClient(url);
-
-// const dbName = 'node_chat';
-
-// client.connect();
-// console.log('Connected successfully to server');
-// const db = client.db(dbName);
-// const collection = db.collection('test_insert');
-// collection.insertOne({a:2}, function(err, docs){
-//   collection.count(function(err, count){
-//     console.log("conunt = %s", count);
-//   });
-
-//   collection.find().toArray(function(err, results){
-//     console.dir(results);
-//     client.close();
-//   })
-// })
-
-// console.log('done.');
+  async.each(users, function(userData, callback){
+    var user = new mongoose.models.User(userData);
+    user.save(callback);
+  }, callback);  
+}

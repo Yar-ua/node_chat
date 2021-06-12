@@ -10,13 +10,14 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var favicon = require('serve-favicon');
 var app = express();
+var createHttpError = require('http-errors');
+var HttpError = require('./error').HttpError;
 
-var routes = require('./routes');
-var user = require('./routes/user');
-
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(bodyParser.text({ type: 'text/html' })); // for application/text-html
+app.use(bodyParser.json({ type: 'application/*+json' })); // for application/json
+app.use(bodyParser.urlencoded({ extended: false })); // for encoding URL
 app.use(cookieParser());
+app.use(require('./middleware/sendHttpError'));
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.engine('ejs', require('ejs-locals'));
 app.set('views', __dirname + '/template');
@@ -25,37 +26,37 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(express.Router());
 
+require('./routes')(app);
+
 if (process.env.NODE_ENV == 'development') {
   app.use(logger('dev'));
 } else {
   app.use(logger('default'));
 }
 
-app.get('/', routes.index);
-// app.get('/users', user.list);
-
-
-http.createServer(app).listen(config.get('port'), function(){
-  log.info('Express server listening on port ' + config.get('port'));
-});
-
-app.use(function(req, res, next) {
-  if (req.url == '/') {
-    res.status(200).send("Hello");
-  } else {
-    next();
-  }
-});
-
 app.use(function(req, res) {
   res.status(404).send("Page Not Found");
 });
 
 app.use(function(err, req, res, next) {
-  if (process.env.NODE_ENV == 'development') {
-    app.use(errorHandler());
-    errorHandler(err, req, res, next);
-  } else {
-    res.status(500);
+  if (typeof err == 'number') { // next(404);
+    err = new HttpError(err);
   }
+  
+  if (err instanceof HttpError) {
+    res.sendHttpError(err);
+  } else {
+    if (process.env.NODE_ENV == 'development') {
+      errorHandler()(err, req, res, next);
+    } else {
+      log.error(err);
+      err = new HttpError(500);
+      res.sendHttpError(err);
+    }
+  }
+});
+
+
+http.createServer(app).listen(config.get('port'), function(){
+  log.info('Express server listening on port ' + config.get('port'));
 });
