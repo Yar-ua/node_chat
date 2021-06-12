@@ -11,7 +11,19 @@ var cookieParser = require('cookie-parser');
 var favicon = require('serve-favicon');
 var app = express();
 
+var routes = require('./routes');
+var user = require('./routes/user');
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(cookieParser());
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.engine('ejs', require('ejs-locals'));
+app.set('views', __dirname + '/template');
+app.set('view engine', 'ejs');
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(express.Router());
 
 if (process.env.NODE_ENV == 'development') {
   app.use(logger('dev'));
@@ -19,12 +31,14 @@ if (process.env.NODE_ENV == 'development') {
   app.use(logger('default'));
 }
 
+app.get('/', routes.index);
+// app.get('/users', user.list);
+
 
 http.createServer(app).listen(config.get('port'), function(){
   log.info('Express server listening on port ' + config.get('port'));
 });
 
-// Middleware
 app.use(function(req, res, next) {
   if (req.url == '/') {
     res.status(200).send("Hello");
@@ -45,82 +59,3 @@ app.use(function(err, req, res, next) {
     res.status(500);
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// var log = require('./lib/log')(module);
-// // var logger = require('morgan');
-
-
-// var app = express();
-
-// // app.use(logger('dev'));
-// // app.engine('ejs', require('ejs-locals'));
-// // app.set('views', __dirname + '/template');
-// // app.set('view engine', 'ejs');
-
-// // app.use(express.favicon());
-
-// // if (app.get('env') == 'development') {
-// //   app.use(express.logger('dev'));
-// // } else {
-// //   app.use(express.logger('default'));
-// // }
-
-// // app.use(express.bodyParser());
-// app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(bodyParser.json());
-// app.use(cookieParser);
-// app.use(express.Router());
-
-// // app.get('/', function(req, res, next) {
-// //   // res.render("index");
-// //   res.send("index");
-// // });
-
-// app.use(function(req, res) {
-//   res.send(404, "Page Not Found Sorry");
-// });
-
-
-
-
-// // app.use(express.static(path.join(__dirname, 'public')));
-
-// // app.use(function(err, req, res, next) {
-// //   if (app.get('env') == 'development') {
-// //     var errorHandler = require('errorhandler');
-// //     errorHandler(err, req, res, next);
-// //   } else {
-// //     res.send(500);
-// //   }
-// // });
-
-// /*
-// var routes = require('./routes');
-// var user = require('./routes/user');
-
-// // all environments
-
-// app.get('/', routes.index);
-// app.get('/users', user.list);
-// */
-
-
-// http.createServer(app).listen(config.get('port'), function(){
-//   // log.info('Express server listening on port ' + config.get('port'));
-//   console.log('Express server listening on port ' + config.get('port'));
-// });
-
