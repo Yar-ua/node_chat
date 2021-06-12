@@ -1,41 +1,126 @@
-var createError = require('http-errors');
+require('dotenv').config();
 var express = require('express');
+var http = require('http');
 var path = require('path');
-var cookieParser = require('cookie-parser');
+var errorHandler = require('errorhandler');
+var config = require('./config');
+var log = require('./lib/log')(module);
 var logger = require('morgan');
-
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-
+var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
+var favicon = require('serve-favicon');
 var app = express();
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+if (process.env.NODE_ENV == 'development') {
+  app.use(logger('dev'));
+} else {
+  app.use(logger('default'));
+}
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
 
-// catch 404 and forward to error handler
+http.createServer(app).listen(config.get('port'), function(){
+  log.info('Express server listening on port ' + config.get('port'));
+});
+
+// Middleware
 app.use(function(req, res, next) {
-  next(createError(404));
+  if (req.url == '/') {
+    res.status(200).send("Hello");
+  } else {
+    next();
+  }
 });
 
-// error handler
+app.use(function(req, res) {
+  res.status(404).send("Page Not Found");
+});
+
 app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+  if (process.env.NODE_ENV == 'development') {
+    app.use(errorHandler());
+    errorHandler(err, req, res, next);
+  } else {
+    res.status(500);
+  }
 });
 
-module.exports = app;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// var log = require('./lib/log')(module);
+// // var logger = require('morgan');
+
+
+// var app = express();
+
+// // app.use(logger('dev'));
+// // app.engine('ejs', require('ejs-locals'));
+// // app.set('views', __dirname + '/template');
+// // app.set('view engine', 'ejs');
+
+// // app.use(express.favicon());
+
+// // if (app.get('env') == 'development') {
+// //   app.use(express.logger('dev'));
+// // } else {
+// //   app.use(express.logger('default'));
+// // }
+
+// // app.use(express.bodyParser());
+// app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.json());
+// app.use(cookieParser);
+// app.use(express.Router());
+
+// // app.get('/', function(req, res, next) {
+// //   // res.render("index");
+// //   res.send("index");
+// // });
+
+// app.use(function(req, res) {
+//   res.send(404, "Page Not Found Sorry");
+// });
+
+
+
+
+// // app.use(express.static(path.join(__dirname, 'public')));
+
+// // app.use(function(err, req, res, next) {
+// //   if (app.get('env') == 'development') {
+// //     var errorHandler = require('errorhandler');
+// //     errorHandler(err, req, res, next);
+// //   } else {
+// //     res.send(500);
+// //   }
+// // });
+
+// /*
+// var routes = require('./routes');
+// var user = require('./routes/user');
+
+// // all environments
+
+// app.get('/', routes.index);
+// app.get('/users', user.list);
+// */
+
+
+// http.createServer(app).listen(config.get('port'), function(){
+//   // log.info('Express server listening on port ' + config.get('port'));
+//   console.log('Express server listening on port ' + config.get('port'));
+// });
+
