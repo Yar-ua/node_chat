@@ -73,16 +73,18 @@ server.listen(config.get('port'), function(){
   log.info('Express server listening on port ' + config.get('port'));
 });
 
-var io = require('socket.io')(server, {
-  cors: {
-    origin: process.env.HOST
-  },
-  logger: log
-});
+require('./socket')(server);
 
-io.sockets.on('connection', function(socket) {
-  socket.on('message', function(text, cb) {
-    socket.broadcast.emit('message', text);
-    cb("123");
-  })
-})
+// var io = require('socket.io')(server, {
+//   cors: {
+//     origin: process.env.HOST
+//   },
+//   logger: log
+// });
+
+// io.sockets.on('connection', function(socket) {
+//   socket.on('message', function(text, cb) {
+//     socket.broadcast.emit('message', text);
+//     cb("123");
+//   })
+// })
