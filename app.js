@@ -2,6 +2,8 @@ require('dotenv').config();
 var express = require('express');
 var http = require('http');
 var path = require('path');
+var session = require('express-session');
+const MongoStore = require('connect-mongo');
 var errorHandler = require('errorhandler');
 var config = require('./config');
 var log = require('./lib/log')(module);
@@ -11,12 +13,21 @@ var cookieParser = require('cookie-parser');
 var favicon = require('serve-favicon');
 var app = express();
 var createHttpError = require('http-errors');
+var mongoose = require('mongoose');
 var HttpError = require('./error').HttpError;
 
 app.use(bodyParser.text({ type: 'text/html' })); // for application/text-html
 app.use(bodyParser.json({ type: 'application/*+json' })); // for application/json
 app.use(bodyParser.urlencoded({ extended: false })); // for encoding URL
 app.use(cookieParser());
+
+app.use(session({
+  secret: config.get('session:secret'),
+  key: config.get('session:key'),
+  cookie: config.get('session:cookie'),
+  store: MongoStore.create({mongoUrl: config.get('mongoose:uri')})
+}));
+
 app.use(require('./middleware/sendHttpError'));
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.engine('ejs', require('ejs-locals'));
@@ -26,13 +37,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(express.Router());
 
-require('./routes')(app);
-
 if (process.env.NODE_ENV == 'development') {
   app.use(logger('dev'));
 } else {
   app.use(logger('default'));
 }
+
+require('./routes')(app);
+
+// app.use(function(req, res, next) {
+//   req.session.numberOfVisits = req.sessions.numberOfVisits + 1 || 1;
+//   console.log("Visits = " + req.session.numberOfVisits);
+// });
 
 app.use(function(req, res) {
   res.status(404).send("Page Not Found");

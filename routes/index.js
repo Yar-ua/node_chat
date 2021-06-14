@@ -1,6 +1,6 @@
 var User = require('../models/user').User;
 var HttpError = require('../error').HttpError;
-var ObjectID = require('mongodb').ObjectId; //TODO fix it, problems with name object id and model ids
+var ObjectID = require('mongodb').ObjectId;
 
 module.exports = function(app) {
   app.use(function(req, res, next) {
@@ -18,9 +18,9 @@ module.exports = function(app) {
     });
   });
   
-  app.get('/user/:id', function(req, res, next) {
+  app.get('/users/:id', function(req, res, next) {
     try {
-      var id = new ObjectID(req.params.id);
+      var id = new ObjectID(req.params.id);;
     } catch (e) {
       next(404);
       return;
