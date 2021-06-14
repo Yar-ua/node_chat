@@ -29,6 +29,7 @@ app.use(session({
 }));
 
 app.use(require('./middleware/sendHttpError'));
+app.use(require('./middleware/loadUser'));
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.engine('ejs', require('ejs-locals'));
 app.set('views', __dirname + '/template');
@@ -44,11 +45,6 @@ if (process.env.NODE_ENV == 'development') {
 }
 
 require('./routes')(app);
-
-// app.use(function(req, res, next) {
-//   req.session.numberOfVisits = req.sessions.numberOfVisits + 1 || 1;
-//   console.log("Visits = " + req.session.numberOfVisits);
-// });
 
 app.use(function(req, res) {
   res.status(404).send("Page Not Found");

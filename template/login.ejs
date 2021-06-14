@@ -1,26 +1,26 @@
 <% layout('/layout/page') -%>
 <% block('title', "Registration and LogIn") -%>
 
-<p>Введите имя пользователя и пароль. Если такого пользователя нет - он будет создан.</p>
+<p>Enter name and password, if user not exists - it will be created.</p>
 
-<form class="form-horizontal login-form" action="/auth/login" method="POST" name="login-form">
+<form class="form-horizontal login-form" name="login-form">
   <div class="form-group">
-    <label for="input-username" class="col-lg-2 control-label">Имя</label>
+    <label for="input-username" class="col-lg-2 control-label">Name</label>
 
     <div class="col-lg-10">
-      <input name="username" value="name" type="text" class="form-control" id="input-username" placeholder="Имя">
+      <input name="username" value="name" type="text" class="form-control" id="input-username" placeholder="name">
     </div>
   </div>
   <div class="form-group">
-    <label for="input-password" class="col-lg-2 control-label">Пароль</label>
+    <label for="input-password" class="col-lg-2 control-label">Password</label>
 
     <div class="col-lg-10">
-      <input name="password" value="pass" type="password" class="form-control" id="input-password" placeholder="Пароль">
+      <input name="password" value="pass" type="password" class="form-control" id="input-password" placeholder="pass">
     </div>
   </div>
   <div class="form-group">
     <div class="col-lg-offset-2 col-lg-10">
-      <button type="submit" class="btn btn-primary" data-loading-text="Отправляю...">Войти</button>
+      <button type="submit" class="btn btn-primary" data-loading-text="Sending...">Login</button>
       <span class="help-block error"></span>
     </div>
   </div>
@@ -29,20 +29,18 @@
 <script>
   $(document.forms['login-form']).on('submit', function() {
     var form = $(this);
-
     $('.error', form).html('');
     $(":submit", form).button("loading");
-
     $.ajax({
       url: "/login",
-      data: form.serialize(),
       method: "POST",
+      data: form.serialize(),
       complete: function() {
         $(":submit", form).button("reset");
       },
       statusCode: {
         200: function() {
-          form.html("Вы вошли в сайт").addClass('alert-success');
+          form.html("You entered to chat").addClass('alert-success');
           window.location.href = "/chat";
         },
         403: function(jqXHR) {
