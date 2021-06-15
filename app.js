@@ -3,7 +3,6 @@ var express = require('express');
 var http = require('http');
 var path = require('path');
 var session = require('express-session');
-const MongoStore = require('connect-mongo');
 var errorHandler = require('errorhandler');
 var config = require('./config');
 var log = require('./lib/log')(module);
@@ -13,8 +12,8 @@ var cookieParser = require('cookie-parser');
 var favicon = require('serve-favicon');
 var app = express();
 var createHttpError = require('http-errors');
-var mongoose = require('mongoose');
 var HttpError = require('./error').HttpError;
+var sessionStore = require('./lib/sessionStore');
 
 app.use(bodyParser.text({ type: 'text/html' })); // for application/text-html
 app.use(bodyParser.json({ type: 'application/*+json' })); // for application/json
@@ -25,7 +24,7 @@ app.use(session({
   secret: config.get('session:secret'),
   key: config.get('session:key'),
   cookie: config.get('session:cookie'),
-  store: MongoStore.create({mongoUrl: config.get('mongoose:uri')})
+  store: sessionStore
 }));
 
 app.use(require('./middleware/sendHttpError'));
@@ -74,17 +73,3 @@ server.listen(config.get('port'), function(){
 });
 
 require('./socket')(server);
-
-// var io = require('socket.io')(server, {
-//   cors: {
-//     origin: process.env.HOST
-//   },
-//   logger: log
-// });
-
-// io.sockets.on('connection', function(socket) {
-//   socket.on('message', function(text, cb) {
-//     socket.broadcast.emit('message', text);
-//     cb("123");
-//   })
-// })

@@ -13,5 +13,6 @@ module.exports = function(server){
         socket.broadcast.emit('message', text);
         cb();
     })
-  })
+  });
+  
 }
