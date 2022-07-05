@@ -1,13 +1,21 @@
 {
   "port": 3000,
   "mongoose": {
-    "uri": "mongodb://localhost/chat",
+    "uri": "mongodb://localhost:27017/node_chat",
     "options": {
-      "server": {
-        "socketOptions": {
-          "keepAlive": 1
-        }
-      }
+      "useNewUrlParser": true,
+      "useUnifiedTopology": true,
+      "useCreateIndex": true,
+      "keepAlive": 1
+    }
+  },
+  "session": {
+    "secret": "KillerIsJim",
+    "key": "sid",
+    "cookie": {
+      "path": "/",
+      "httpOnly": true,
+      "maxAge": null
     }
   }
 }

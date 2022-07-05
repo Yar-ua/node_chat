@@ -1,0 +1,71 @@
+<% layout('layout/page') -%>
+<% block('title', "Node-Chat") -%>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<p class="lead">Chat will be here.</p>
+
+<p>Welcome, <%= user.get('username') %></p>
+
+
+<div id="room">
+  <ul id="chat" class="list-unstyled"></ul>
+  <form>
+    <input class="form-control" autocomplete="off" autofocus placeholder="Message...">
+  </form>
+</div>
+
+<script>
+  var input = $('#room input');
+  var form = $('#room form');
+  var ul = $('#room ul');
+  
+  var socket = io.connect('', {
+    reconnect: false
+  });
+
+  socket
+    .on('message', function(message) {
+      printMessage(message);
+    })
+    .on('connect', function() {
+      printStatus("server connected");
+      form.on('submit', sendMessage);
+      input.prop('disabled', false);
+    })
+    .on('disconnect', function() {
+      printStatus("connection lost");
+      form.off('submit', sendMessage);
+      input.prop('disabled', true);
+      setTimeout(reconnect, 500);
+    });
+
+    function sendMessage() {
+      var text = $('.form-control').val()
+      socket.emit('message', text, function() {
+      printMessage(text);
+    });
+
+      input.val('');
+      return false;
+    }
+
+  socket.on('message', function(text) {
+    $('<li>', {text: text}).appendTo(ul);
+  });
+
+
+  function reconnect() {
+    socket.once('error', function() {
+      setTimeout(reconnect, 500);
+    });
+    socket.socket.connect();
+  }
+
+  function printStatus(status) {
+    $('<li>').append($('<i>').text(status)).appendTo(ul);
+  }
+  function printMessage(text) {
+    $('<li>').text(text).appendTo(ul);
+  }
+</script>
